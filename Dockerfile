@@ -297,9 +297,30 @@ RUN KEY="A4A9406876FCBD3C456770C88C718D3B5072E1F5" \
     && apt-get autoremove -yqq --purge \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# MS SQL DRIVER 17
+RUN apt-get update \
+	&& curl https://packages.microsoft.com/keys/microsoft.asc > /usr/share/microsoft.asc \
+	&& apt-key add /usr/share/microsoft.asc \
+	&& curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+	&& apt-get update \
+	&& ACCEPT_EULA=Y apt-get -y install msodbcsql17 \
+	&& ACCEPT_EULA=Y apt-get -y install mssql-tools \
+	&& apt-get -y install --reinstall g++ \
+	&& echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile \
+	&& echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc \
+	&& . ~/.bashrc \
+	&& apt-get -y install unixodbc-dev \
+	&& apt-get -y install libgssapi-krb5-2
+
 ARG PIP_VERSION
 ENV PIP_VERSION=${PIP_VERSION}
 RUN pip install --upgrade pip==${PIP_VERSION}
+
+# INSTALL PYODBC
+RUN pip install -U pip setuptools wheel \
+	&& pip install pyodbc \
+	&& pip install pandas
+
 
 ENV AIRFLOW_UID=${AIRFLOW_UID}
 ENV AIRFLOW_GID=${AIRFLOW_GID}
